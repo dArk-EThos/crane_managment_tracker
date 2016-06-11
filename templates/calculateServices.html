@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block extra_scripts %}
+<script>
+
+$(document).ready(function() {
+
+	$(".btn-service-complete").click(function() {
+
+		var service_id = $(this).attr("data-id")
+		var odo = encodeURIComponent({{ odometer_reading }})
+
+		$.ajax({
+            url: '/service/new/' + service_id + '?odometer=' + odo,
+            data: null,
+            type: 'POST',
+            success: function(response) {
+                console.log(response.message);
+            },
+            error: function(error) {
+                alert(error);
+            }
+        });
+	});
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-sm-4 col-sm-offset-4 col-xs-12">
+			{% from "_formhelpers.html" import render_field %}
+			<form method=post action="/">
+			  <dl>
+			    {{ render_field(form.odometer_reading) }}
+			  </dl>
+			  <p><input type=submit value=Calculate>
+			</form>
+		</div>
+	</div>
+	{% if service_operations|length > 0 %}
+		<div class="row">
+			<div class="col-sm-12">
+			<table class="table table-striped">
+			    <thead>
+			      <tr>
+			      	<th></th>
+			        <th>Service</th>
+			        <th>Operation</th>
+			        <th>Interval</th>
+			        <th>Last Serviced</th>
+			      </tr>
+			    </thead>
+			    <tbody>
+			    {% for service in service_operations %}
+			      <tr>
+			      	<td><button class="btn btn-default btn-sm btn-service-complete" data-id="{{ service.service_id }}"><span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span></button></td>
+			        <td>{{ service.service_name }}</td>
+			        <td>{{ service.service_operation }}</td>
+			        <td>{{ service.service_interval }}</td>
+			        <td>{{ service.service_lastupdate }}</td>
+			      </tr>
+	  			{% endfor %}
+			  
+			    </tbody>
+			  </table>
+			</div>
+		</div>
+	{% endif %}
+{% endblock %}
