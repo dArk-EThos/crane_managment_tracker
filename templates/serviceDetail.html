@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+    <style>
+    .page-row-img {
+            margin: 15px;
+            float: left;
+        }
+    .page-row {
+        margin-bottom: 25px;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+	{% if page_items|length > 0 %}
+        {% for page_item in page_items %}
+        <div class="row">
+            <div class="col-xs-12 page-row">
+                {% if page_item.page_item_text|length > 0 %}
+                    <p>
+                        {% if page_item.page_item_image|length > 0 %}
+                            <img class="page-row-img" src="{{ page_item.page_item_image }}"/>
+                        {% endif %}
+
+                        {{ page_item.page_item_text }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}<div class="row">
+            <h3>There is no information found about this service.</h3>
+		</div>
+    {% endif %}
+
+{% endblock %}

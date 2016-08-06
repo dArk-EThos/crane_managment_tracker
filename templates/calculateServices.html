@@ -5,67 +5,157 @@
 
 $(document).ready(function() {
 
-	$(".btn-service-complete").click(function() {
+    upper_odo = encodeURIComponent({{ upper_engine_reading }});
+    lower_odo = encodeURIComponent({{ lower_engine_reading }});
 
-		var service_id = $(this).attr("data-id")
-		var odo = encodeURIComponent({{ odometer_reading }})
+    $("#btn-confirm").hide();
+
+	$("#btn-submit").click(function() {
+
+        changes = []
+
+        $('.btn-service').each(function(i, val) {
+
+            var odo = $(val).attr("data-engine-type").toLowerCase() === "upper" ? upper_odo : lower_odo
+
+            if ($(val).hasClass("btn-success")) {
+                var service_id = $(val).attr("data-id");
+                changes.push({"service_id": service_id, "odometer_reading": odo});
+            }
+        });
 
 		$.ajax({
-            url: '/service/new/' + service_id + '?odometer=' + odo,
-            data: null,
-            type: 'POST',
+            url: '/service/update',
+            dataType: 'json',
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify(changes),
             success: function(response) {
-                console.log(response.message);
+                console.log(response);
             },
             error: function(error) {
-                alert(error);
+                console.log(error);
             }
         });
 	});
+
+    $(".btn-service").click(function() {
+        $(this).toggleClass("btn-success");
+
+        if ($('.btn-success').length <= 0) {
+            $("#btn-confirm").hide();
+        }
+        else {
+            $("#btn-confirm").show();
+        }
+    });
+
+    $("#btn-confirm").click(function() {
+        $("#confirm-text").html(getConfirmChangesHtml());
+    });
 });
+
+function getConfirmChangesHtml() {
+
+    var html = "<ol>"
+
+    $('.btn-service').each(function(i, val) {
+
+        if ($(val).hasClass("btn-success")) {
+            var service_id = $(val).attr("data-id")
+            var odo = encodeURIComponent($(val).attr("data-engine-type").toLowerCase() === "upper" ? upper_odo : lower_odo )
+            var service_name = $(val).parent().next().text()
+
+            html += "<li><strong>" + service_name + "</strong> - " + odo + "</li>"
+        }
+    });
+
+    html += "</ol>"
+
+    return html
+}
 
 </script>
 {% endblock %}
 
+{% block extra_head %}
+<style>
+dl {
+    margin: 0px;
+}
+
+.form-group {
+    margin: 0 15px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 	<div class="row">
-		<div class="col-sm-4 col-sm-offset-4 col-xs-12">
-			{% from "_formhelpers.html" import render_field %}
-			<form method=post action="/">
-			  <dl>
-			    {{ render_field(form.odometer_reading) }}
-			  </dl>
-			  <p><input type=submit value=Calculate>
-			</form>
+		<div class="col-xs-12 text-center">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                {% from "_formhelpers.html" import render_field %}
+                <form class="form-inline" method=post action="/">
+                    <div class="form-group">
+                      <dl>
+                        {{ render_field(form.upper_engine_reading) }}
+                      </dl>
+                        </div>
+                      <div class="form-group">
+                          <dl>
+                            {{ render_field(form.lower_engine_reading) }}
+                          </dl>
+                      </div>
+                     <div class="form-group">
+                         {{ render_field(form.cranes) }}
+                    </div>
+                    <div class="form-group">
+                      <button class="btn btn-default" type=submit>Submit</button>
+                    </div>
+                </form>
+              </div>
+            </div>
 		</div>
-	</div>
 	{% if service_operations|length > 0 %}
 		<div class="row">
 			<div class="col-sm-12">
-			<table class="table table-striped">
+			<table id="service-table" class="table table-striped">
 			    <thead>
 			      <tr>
 			      	<th></th>
 			        <th>Service</th>
+                    <th>Engine</th>
 			        <th>Operation</th>
 			        <th>Interval</th>
+                    <th>Last Serviced Mileage</th>
 			        <th>Last Serviced</th>
 			      </tr>
 			    </thead>
 			    <tbody>
 			    {% for service in service_operations %}
 			      <tr>
-			      	<td><button class="btn btn-default btn-sm btn-service-complete" data-id="{{ service.service_id }}"><span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span></button></td>
-			        <td>{{ service.service_name }}</td>
+			      	<td><button class="btn btn-default btn-sm btn-service" data-id="{{ service.service_id }}" data-engine-type='{{ service.engine_type }}'><span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span></button></td>
+			        <td><a target="_blank" href='{{ url_for('service_detail', service_id=service.service_id) }}'>{{ service.service_name }}</a></td>
+                    <td>{{ service.engine_type }}</td>
 			        <td>{{ service.service_operation }}</td>
 			        <td>{{ service.service_interval }}</td>
+                    <td>{{ service.service_lastupdate_odo }}</td>
 			        <td>{{ service.service_lastupdate }}</td>
 			      </tr>
 	  			{% endfor %}
 			  
 			    </tbody>
 			  </table>
+
+                <button type="button" id="btn-confirm" class="btn btn-primary" data-toggle="modal" data-target="#baseModal">
+                  Submit Updates
+                </button>
 			</div>
+		</div>
+    {% elif service_logs|length <= 0 and isPost %}
+        <div class="row">
+            <h3>There are no services that meet the given criteria.</h3>
 		</div>
 	{% endif %}
 {% endblock %}

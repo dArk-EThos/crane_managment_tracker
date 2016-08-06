@@ -1,5 +1,11 @@
-from wtforms import Form, StringField
+from wtforms import Form, StringField, SelectField
 
 
 class CalculateForm(Form):
-    odometer_reading = StringField('Odometer Reading')
+    upper_engine_reading = StringField('Upper Engine Hours')
+    lower_engine_reading = StringField('Lower Engine Hours')
+    cranes = SelectField('Select Crane', coerce=int)
+
+
+class ServiceLogForm(Form):
+    cranes = SelectField('Select Crane', coerce=int)

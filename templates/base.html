@@ -13,11 +13,29 @@
     {%- block styles %}
     <!-- Bootstrap -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <style>
+
+    #service-table {
+        margin-top: 15px;
+    }
+
+    </style>
+
     {%- endblock styles %}
     {%- endblock head %}
+
+    {% block extra_head %}
+    {%- endblock extra_head %}
   </head>
   <body{% block body_attribs %}{% endblock body_attribs %}>
     {% block body -%}
+         <nav class="navbar navbar-default" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <a href="/"><img class="img-responsive" src="/static/img/aa_logo.gif"></a>
+            </div>
+        </nav>
     {% block navbar %}
     {%- endblock navbar %}
 
@@ -34,6 +52,24 @@
 
     {% block extra_scripts %}
     {%- endblock extra_scripts %}
+
+    <div class="modal fade" id="baseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Are you sure?</h4>
+          </div>
+          <div class="modal-body">
+              <div id="confirm-text"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button id="btn-submit" type="button" class="btn btn-warning">Save updates</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     {%- endblock body %}
   </body>
