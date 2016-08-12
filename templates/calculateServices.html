@@ -31,10 +31,12 @@ $(document).ready(function() {
             contentType: 'application/json',
             data: JSON.stringify(changes),
             success: function(response) {
-                console.log(response);
+                alert("data was updated successfully.");
+                $('#baseModal').modal('toggle');
             },
             error: function(error) {
-                console.log(error);
+                alert("there was an error with your request: " + error.responseText);
+                $('#baseModal').modal('toggle');
             }
         });
 	});
@@ -63,7 +65,7 @@ function getConfirmChangesHtml() {
 
         if ($(val).hasClass("btn-success")) {
             var service_id = $(val).attr("data-id")
-            var odo = encodeURIComponent($(val).attr("data-engine-type").toLowerCase() === "upper" ? upper_odo : lower_odo )
+            var odo = $(val).attr("data-engine-type").toLowerCase() === "upper" ? upper_odo : lower_odo
             var service_name = $(val).parent().next().text()
 
             html += "<li><strong>" + service_name + "</strong> - " + odo + "</li>"
@@ -97,16 +99,16 @@ dl {
               <div class="panel-body">
                 {% from "_formhelpers.html" import render_field %}
                 <form class="form-inline" method=post action="/">
-                    <div class="form-group">
-                      <dl>
-                        {{ render_field(form.upper_engine_reading) }}
-                      </dl>
-                        </div>
                       <div class="form-group">
                           <dl>
                             {{ render_field(form.lower_engine_reading) }}
                           </dl>
                       </div>
+                    <div class="form-group">
+                      <dl>
+                        {{ render_field(form.upper_engine_reading) }}
+                      </dl>
+                        </div>
                      <div class="form-group">
                          {{ render_field(form.cranes) }}
                     </div>
@@ -158,4 +160,23 @@ dl {
             <h3>There are no services that meet the given criteria.</h3>
 		</div>
 	{% endif %}
+
+    <div class="modal fade" id="baseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Are you sure?</h4>
+          </div>
+          <div class="modal-body">
+              <div id="confirm-text"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button id="btn-submit" type="button" class="btn btn-primary">Save updates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 {% endblock %}

@@ -4,26 +4,57 @@
     <style>
     .page-row-img {
             margin: 15px;
-            float: left;
+            max-width: 100%;
+            height: auto;
         }
     .page-row {
         margin-bottom: 25px;
     }
+    .page-header {
+        margin-top: 0;
+    }
+    .modal-body, .modal-dialog {
+        height: 800px;
+        width: 1000px;
+    }
+    textarea#text {
+        height: 600px;
+    }
     </style>
 {% endblock %}
 
+
+{% block extra_scripts %}
+<script type="text/javascript">
+    $( document ).ready(function(e) {
+       $('#btn-submit').click(function(e) {
+           e.preventDefault();
+           $("#page-item-form").submit();
+           $('#baseModal').modal('hide');
+       });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
+
+    <div class="page-header">
+      <h1>{{ service_name }}</h1>
+    </div>
+
+    <button class="btn btn-default" id="btn-add" data-toggle="modal" data-target="#baseModal"><span class="glyphicon glyphicon-plus"></span> Add Page Item</button>
 
 	{% if page_items|length > 0 %}
         {% for page_item in page_items %}
         <div class="row">
             <div class="col-xs-12 page-row">
+                {% if page_item.page_item_image|length > 0 %}
+                    <a href="/static/img/{{ page_item.page_item_image }}"><img class="img-responsive page-row-img" src="/static/img/{{ page_item.page_item_image }}"/></a>
+                {% endif %}
+            </div>
+            <div class="col-xs-12 page-row">
                 {% if page_item.page_item_text|length > 0 %}
                     <p>
-                        {% if page_item.page_item_image|length > 0 %}
-                            <img class="page-row-img" src="{{ page_item.page_item_image }}"/>
-                        {% endif %}
-
                         {{ page_item.page_item_text }}
                     </p>
                 {% endif %}
@@ -31,9 +62,40 @@
         </div>
         {% endfor %}
 
-    {% else %}<div class="row">
-            <h3>There is no information found about this service.</h3>
+    {% else %}
+        <div class="row">
+            <div class="col-xs-12 page-row">
+                <h3>There is no information about this service.</h3>
+            </div>
 		</div>
     {% endif %}
+
+    <div class="modal fade" id="baseModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Add Page Item</h4>
+          </div>
+          <div class="modal-body text-left">
+            {% from "_formhelpers.html" import render_field %}
+            <form id="page-item-form" class="form" method="post" action="{{ service_id }}" enctype="multipart/form-data">
+                <div>
+                    {{ form.image_upload.label(style="font-weight:normal") }}
+                    {{ form.image_upload }}
+                </div>
+                <br />
+                 <div class="form-group">
+                     {{ render_field(form.text) }}
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button id="btn-submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 {% endblock %}

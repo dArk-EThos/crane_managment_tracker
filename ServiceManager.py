@@ -1,9 +1,9 @@
 from sqlalchemy.sql import func
-from sqlalchemy.exc import DatabaseError
-from flask import Markup, escape
+from flask import Markup, escape, json
 from datetime import datetime
 
 from DatabaseManager import db
+from sqlalchemy.exc import DatabaseError
 
 class Service(db.Model):
     service_id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -17,13 +17,14 @@ class Service(db.Model):
     service_logs = db.relationship("ServiceLog", backref='service_log', lazy='dynamic')
     service_audits = db.relationship("ServiceLog", backref='service_audit', lazy='dynamic')
 
-    def __init__(self, name, operation, interval, crane_id, capacity_gallons=None, capacity_liters=None):
+    def __init__(self, name, operation, interval, crane_id, engine_type, capacity_gallons=None, capacity_liters=None):
         self.service_name = name
         self.service_operation = operation
         self.service_interval = interval
         self.crane_id = crane_id
         self.service_capacity_gallons = capacity_gallons
         self.service_capacity_liters = capacity_liters
+        self.engine_type = engine_type
 
     def __repr__(self):
         return 'Service(service_name=%s, service_operation=%s)' % (
@@ -37,9 +38,9 @@ class ServiceLog(db.Model):
     service_log_lastupdate_odo = db.Column(db.Integer, nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), nullable=False)
 
-    def __init__(self, service_log_lastupdate_odo, service_id, service_log_lastupdate=datetime.now()):
+    def __init__(self, service_log_lastupdate_odo, service_id):
         self.service_log_lastupdate_odo = service_log_lastupdate_odo
-        self.service_log_lastupdate = service_log_lastupdate
+        self.service_log_lastupdate = datetime.now()
         self.service_id = service_id
 
     def __repr__(self):
@@ -81,17 +82,28 @@ class Crane(db.Model):
 
 def get_services(upper_engine_reading, lower_engine_reading, crane_id):
 
-    services_and_logs_upper = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).\
+    if (upper_engine_reading != ''):
+        services_and_logs_upper = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).\
                     filter((func.ifnull(ServiceLog.service_log_lastupdate_odo, 0) + Service.service_interval) <= Markup.escape(upper_engine_reading)).\
                     filter(Service.crane_id == crane_id).\
                     filter(Service.engine_type == "upper")
+    else:
+         # if the lower engine reading is an empty string, we don't want to return anything for that engine.
+        # the below line of code produces an empty result that will later be unioned
+        services_and_logs_upper = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).filter(0==1)
 
-    services_and_logs_lower = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).\
-                filter((func.ifnull(ServiceLog.service_log_lastupdate_odo, 0) + Service.service_interval) <= Markup.escape(lower_engine_reading)).\
-                filter(Service.crane_id == crane_id).\
-                filter(Service.engine_type == "lower")
+    if (lower_engine_reading != ''):
+        services_and_logs_lower = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).\
+                    filter((func.ifnull(ServiceLog.service_log_lastupdate_odo, 0) + Service.service_interval) <= Markup.escape(lower_engine_reading)).\
+                    filter(Service.crane_id == crane_id).\
+                    filter(Service.engine_type == "lower")
+    else:
+        # if the lower engine reading is an empty string, we don't want to return anything for that engine.
+        # the below line of code produces an empty result that will later be unioned
+        services_and_logs_lower = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).filter(0==1)
 
-    services_and_logs = services_and_logs_upper.union_all(services_and_logs_lower)
+
+    services_and_logs = services_and_logs_lower.union_all(services_and_logs_upper).order_by(Service.engine_type, Service.service_name)
 
     services = []
 
@@ -135,11 +147,11 @@ def markServicesComplete(logItems):
             db.session.commit()
 
     except DatabaseError:
-        return "ERROR: Could not establish connection with database."
-    else:
-        "ERROR"
+        return "Database Error."
+    except Exception as e:
+        return "Error: " + repr(e)
 
-    return "OK"
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 def changeServices(serviceItems):
 
@@ -147,39 +159,34 @@ def changeServices(serviceItems):
         for serviceItem in serviceItems:
 
             serviceLog = ServiceLog.query.filter_by(service_id=serviceItem.get('service_id')).order_by(ServiceLog.service_log_lastupdate.desc()).first()
-            newServiceAudit = ServiceAudit(serviceItem.get('service_lastupdate_odo'), serviceItem.get('service_id'), "Manual record adjustment.")
 
-            if (serviceLog is None):
-                #handle somehow
-                pass
+            if (serviceLog is not None):
+                serviceLog.service_log_lastupdate_odo = serviceItem.get('service_lastupdate_odo')
+                newServiceAudit = ServiceAudit(serviceItem.get('service_lastupdate_odo'), serviceItem.get('service_id'), "Manual record adjustment.")
+                db.session.add(newServiceAudit)
 
             service = Service.query.filter_by(service_id=serviceItem.get('service_id')).order_by(Service.service_id).first()
 
-            if (service is None):
-                #handle somehow
-                pass
+            if (service is not None):
+                service.service_name = serviceItem.get('service_name')
+                service.service_operation = serviceItem.get('service_operation')
+                service.service_interval = serviceItem.get('service_interval')
 
-            serviceLog.service_log_lastupdate_odo = serviceItem.get('service_lastupdate_odo')
-            service.service_name = serviceItem.get('service_name')
-            service.service_operation = serviceItem.get('service_operation')
-            service.service_interval = serviceItem.get('service_interval')
-
-            db.session.add(newServiceAudit)
             db.session.commit()
 
-    except DatabaseError:
-        return "ERROR: Could not establish connection with database."
-    else:
-        "ERROR"
+    except DatabaseError as e:
+        return "Database Error: " + repr(e)
+    except Exception as e:
+        return repr(e)
 
-    return "OK"
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 def get_service_logs(crane_id):
     try:
 
         services_and_logs = db.session.query(Service, ServiceLog).outerjoin(ServiceLog).\
             filter(Service.crane_id == crane_id).\
-            order_by(ServiceLog.service_log_lastupdate.desc()).\
+            order_by(ServiceLog.service_log_lastupdate.desc(), Service.engine_type.desc(), Service.service_name).\
             all()
 
         services = []
@@ -193,7 +200,7 @@ def get_service_logs(crane_id):
 
             services.append(
                 {"service_id": service.service_id,
-                 "service_lastupdate": service_log.service_log_lastupdate.ctime() if service_log else "<no record>",
+                 "service_lastupdate": service_log.service_log_lastupdate.strftime("%B %d, %Y") if service_log else "<no record>",
                  "service_lastupdate_odo": service_log.service_log_lastupdate_odo if service_log else "<no record>",
                  "service_name": service.service_name,
                  "service_operation": service.service_operation,
@@ -202,5 +209,19 @@ def get_service_logs(crane_id):
 
         return services
 
-    except DatabaseError:
-        return "ERROR: Could not establish connection with database."
+    except DatabaseError as e:
+        return "Database Error: " + repr(e)
+    except Exception as e:
+        return repr(e)
+
+def get_service(service_id):
+    try:
+        service = db.session.query(Service).\
+            filter(Service.service_id == service_id).first()
+
+        return service
+
+    except DatabaseError as e:
+        return "Database Error: " + repr(e)
+    except Exception as e:
+        return repr(e)
