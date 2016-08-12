@@ -14,3 +14,4 @@ class ServiceLogForm(Form):
 class PageItemForm(Form):
     image_upload = FileField()
     text = TextAreaField('Text')
+    password = StringField('Passcode')

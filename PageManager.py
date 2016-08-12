@@ -2,6 +2,8 @@ from DatabaseManager import db, app
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy import func
 from flask import json
+from ServiceManager import get_service, Service
+from sqlalchemy import and_
 import os
 from werkzeug.utils import secure_filename
 
@@ -36,10 +38,29 @@ def getPageItems(service_id):
 
     return pageItems
 
+# multiple services can be associated with a single page
 def getPageByServiceId(service_id):
     page = db.session.query(Page).\
     filter(Page.service_id == service_id).\
     first()
+
+    if (page is None):
+        #find other services that might fit the criteria
+        service = get_service(service_id)
+
+        services = db.session.query(Service).\
+        filter(and_(Service.service_name == service.service_name, Service.engine_type == service.engine_type)).\
+        all()
+
+        for potentialService in services:
+            potentialPage = db.session.query(Page).\
+            filter(Page.service_id == potentialService.service_id).\
+            first()
+
+            if potentialPage is not None:
+                page = potentialPage
+                break
+
 
     if (page is None):
         newPage = Page(service_id)

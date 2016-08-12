@@ -66,7 +66,7 @@ def service_detail(service_id):
 
     form = PageItemForm(request.form)
 
-    if request.method == "POST" and form.validate():
+    if request.method == "POST" and form.validate() and form["password"].data == "scott":
         file = request.files['image_upload']
         APP_ROOT = os.path.dirname(os.path.abspath(__file__))
         filename = secure_filename(file.filename)
@@ -81,15 +81,6 @@ def service_detail(service_id):
     service = get_service(service_id)
 
     return render_template("serviceDetail.html", form=form, page_items=page_items, service_name=service.service_name, service_id=service_id)
-
-@app.route('/sql', methods=["GET"])
-def sql():
-
-    from filereader import readfile
-
-    lines = readfile()
-
-    return render_template("file.html", lines=lines)
 
 
 if __name__ == '__main__':
