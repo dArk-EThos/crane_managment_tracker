@@ -31,8 +31,8 @@ $(document).ready(function() {
             contentType: 'application/json',
             data: JSON.stringify(changes),
             success: function(response) {
-                alert("data was updated successfully.");
                 $('#baseModal').modal('toggle');
+                $('#calc-form').submit();
             },
             error: function(error) {
                 alert("there was an error with your request: " + error.responseText);
@@ -98,7 +98,7 @@ dl {
             <div class="panel panel-default">
               <div class="panel-body">
                 {% from "_formhelpers.html" import render_field %}
-                <form class="form-inline" method=post action="/">
+                <form id="calc-form" class="form-inline" method=post action="/">
                       <div class="form-group">
                           <dl>
                             {{ render_field(form.lower_engine_reading) }}
@@ -130,6 +130,8 @@ dl {
                     <th>Engine</th>
 			        <th>Operation</th>
 			        <th>Interval</th>
+                    <th>Gallons</th>
+                    <th>Liters</th>
                     <th>Last Serviced Mileage</th>
 			        <th>Last Serviced</th>
 			      </tr>
@@ -142,6 +144,8 @@ dl {
                     <td>{{ service.engine_type }}</td>
 			        <td>{{ service.service_operation }}</td>
 			        <td>{{ service.service_interval }}</td>
+                    <td>{{ service.service_capacity_gallons }}</td>
+                    <td>{{ service.service_capacity_liters }}</td>
                     <td>{{ service.service_lastupdate_odo }}</td>
 			        <td>{{ service.service_lastupdate }}</td>
 			      </tr>

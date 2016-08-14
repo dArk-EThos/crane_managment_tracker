@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, SelectField, FileField, TextAreaField, validators
+from wtforms import Form, StringField, SelectField, FileField, TextAreaField, PasswordField, validators
 
 
 class CalculateForm(Form):
@@ -14,4 +14,4 @@ class ServiceLogForm(Form):
 class PageItemForm(Form):
     image_upload = FileField()
     text = TextAreaField('Text')
-    password = StringField('Passcode')
+    password = PasswordField('Passcode')

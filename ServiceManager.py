@@ -119,6 +119,8 @@ def get_services(upper_engine_reading, lower_engine_reading, crane_id):
              "service_name": service.service_name,
              "service_operation": service.service_operation,
              "service_interval": service.service_interval,
+             "service_capacity_gallons": "N/A" if service.service_capacity_gallons == 0 else service.service_capacity_gallons,
+             "service_capacity_liters": "N/A" if service.service_capacity_liters == 0 else service.service_capacity_gallons,
              "engine_type": service.engine_type.capitalize(),
              "service_lastupdate": "<no record>" if service_log is None else service_log.service_log_lastupdate.strftime("%B %d, %Y"),
              "service_lastupdate_odo": "<no record>" if service_log is None else service_log.service_log_lastupdate_odo})

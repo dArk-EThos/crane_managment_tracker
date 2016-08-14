@@ -4,7 +4,7 @@
 {%- block html %}
   <head>
     {%- block head %}
-    <title>{% block title %}{{title|default}}{% endblock title %}</title>
+    <title>{% block title %}A&A Transfer Inc : Crane Management{% endblock title %}</title>
 
     {%- block metas %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +13,12 @@
     {%- block styles %}
     <!-- Bootstrap -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <style>
+    #main-container {
+        margin: 40px 20px;
+    }
+    </style>
+
     {%- endblock styles %}
     {%- endblock head %}
 
@@ -31,7 +37,7 @@
     {% block navbar %}
     {%- endblock navbar %}
 
-    <div class="container" style="margin-top: 40px;">
+    <div id="main-container" class="container-fluid">
     {% block content -%}
     {%- endblock content %}
     </div>
