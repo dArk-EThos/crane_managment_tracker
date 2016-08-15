@@ -2,8 +2,8 @@ from wtforms import Form, StringField, SelectField, FileField, TextAreaField, Pa
 
 
 class CalculateForm(Form):
-    upper_engine_reading = StringField('Upper Engine Hours', validators=[validators.Regexp('^-?[0-9]*$', message="Must enter a number")])
-    lower_engine_reading = StringField('Lower Engine Hours', validators=[validators.Regexp('^-?[0-9]*$', message="Must enter a number")])
+    upper_engine_reading = StringField('Upper Engine Hours', validators=[validators.Regexp('^-?[0-9]{0,9}$', message="Must enter a number less than 10 digits")])
+    lower_engine_reading = StringField('Lower Engine Hours', validators=[validators.Regexp('^-?[0-9]{0,9}$', message="Must enter a number less than 10 digits")])
     cranes = SelectField('Select Crane', coerce=int, validators=[validators.DataRequired()])
 
 

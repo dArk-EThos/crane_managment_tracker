@@ -1,3 +1,4 @@
 Flask
 Flask-WTF
 flask_sqlalchemy
+MySQL-python

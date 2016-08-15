@@ -82,6 +82,15 @@ def service_detail(service_id):
 
     return render_template("serviceDetail.html", form=form, page_items=page_items, service_name=service.service_name, service_id=service_id)
 
+@app.route('/sql', methods=["GET"])
+def sql():
+
+    from filereader import readfile
+
+    lines = readfile()
+
+    return render_template("file.html", lines=lines)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
